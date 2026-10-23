@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Koya Booking</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-gray-50 min-h-screen text-gray-900">
+    <div class="max-w-3xl mx-auto px-4 py-10">
+      <header class="mb-8">
+        <h1 class="text-2xl font-bold">Koya Booking</h1>
+        <p class="text-sm text-gray-500 mt-1">Book your next appointment</p>
+      </header>
+
+      <!-- Tabs -->
+      <div class="flex border-b border-gray-200 mb-6 gap-1">
+        <button
+          id="tab-slots"
+          onclick="switchTab('slots')"
+          class="px-4 py-2 text-sm font-medium border-b-2 border-blue-600 text-blue-600 -mb-px"
+        >
+          Slots
+        </button>
+        <button
+          id="tab-bookings"
+          onclick="switchTab('bookings')"
+          class="px-4 py-2 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 -mb-px"
+        >
+          My Bookings
+        </button>
+        <button
+          id="tab-admin"
+          onclick="switchTab('admin')"
+          class="px-4 py-2 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 -mb-px"
+        >
+          Admin
+        </button>
+      </div>
+
+      <!-- Slots Panel -->
+      <div id="panel-slots">
+        <div class="flex gap-2 mb-5">
+          <input
+            id="filter"
+            type="text"
+            placeholder="Filter by provider…"
+            class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <button
+            onclick="loadSlots()"
+            class="px-4 py-2 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          >
+            Search
+          </button>
+          <button
+            onclick="clearFilter()"
+            class="px-3 py-2 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
+          >
+            Clear
+          </button>
+        </div>
+        <div id="slots-msg" class="text-sm text-gray-400 py-10 text-center">
+          Loading…
+        </div>
+        <div id="slots-grid" class="grid gap-3 sm:grid-cols-2"></div>
+      </div>
+
+      <!-- My Bookings Panel -->
+      <div id="panel-bookings" class="hidden">
+        <div class="flex gap-2 mb-5">
+          <input
+            id="email-input"
+            type="email"
+            placeholder="Your email address…"
+            class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <button
+            onclick="loadBookings()"
+            class="px-4 py-2 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          >
+            Look up
+          </button>
+        </div>
+        <div id="bookings-msg" class="text-sm text-gray-400 py-10 text-center">
+          Enter your email address to see your bookings.
+        </div>
+        <div id="bookings-list" class="space-y-3"></div>
+        <div class="mt-4 text-center">
+          <button
+            id="load-more"
+            class="hidden text-sm text-blue-600 hover:underline"
+          >
+            Load more
+          </button>
+        </div>
+      </div>
+
+      <!-- Admin Panel -->
+      <div id="panel-admin" class="hidden">
+        <div
+          class="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-5 text-sm text-amber-800"
+        >
+          Replaces <strong>all</strong> slots and permanently deletes every
+          existing booking.
+        </div>
+        <label class="block text-sm font-medium text-gray-700 mb-1.5"
+          >Slots JSON (array)</label
+        >
+        <textarea
+          id="admin-input"
+          rows="10"
+          placeholder='[{"id":"s1","provider":"Dr Ade","start":"2026-12-10T09:00:00Z","end":"2026-12-10T09:30:00Z"}]'
+          class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"
+        ></textarea>
+        <div class="mt-3 flex items-center gap-3">
+          <button
+            onclick="handleReset()"
+            class="px-4 py-2 text-sm font-medium bg-red-600 text-white rounded-lg hover:bg-red-700"
+          >
+            Replace All Slots
+          </button>
+          <span id="admin-msg" class="text-sm"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Booking Modal -->
+    <div
+      id="modal"
+      class="hidden fixed inset-0 z-50 items-center justify-center bg-black/40 p-4"
+    >
+      <div class="bg-white rounded-xl shadow-xl w-full max-w-sm p-6">
+        <div class="flex justify-between items-start mb-1">
+          <h2 class="text-base font-semibold">Book Slot</h2>
+          <button
+            onclick="closeModal()"
+            class="text-gray-400 hover:text-gray-600 text-2xl leading-none"
+          >
+            &times;
+          </button>
+        </div>
+        <p id="modal-info" class="text-sm text-gray-500 mb-5"></p>
+        <form id="book-form" novalidate>
+          <input type="hidden" id="modal-slot-id" />
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-1"
+              >Name</label
+            >
+            <input
+              id="modal-name"
+              type="text"
+              required
+              autocomplete="name"
+              class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <div class="mb-5">
+            <label class="block text-sm font-medium text-gray-700 mb-1"
+              >Email</label
+            >
+            <input
+              id="modal-email"
+              type="email"
+              required
+              autocomplete="email"
+              class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <p id="book-error" class="hidden text-sm text-red-600 mb-3"></p>
+          <div class="flex gap-2 justify-end">
+            <button
+              type="button"
+              onclick="closeModal()"
+              class="px-4 py-2 text-sm text-gray-600 hover:text-gray-800"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              id="book-submit"
+              class="px-4 py-2 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-60"
+            >
+              Confirm
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Toast container -->
+    <div
+      id="toasts"
+      class="fixed bottom-6 right-6 z-50 flex flex-col gap-2 items-end"
+    ></div>
+
+    <script src="config.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>

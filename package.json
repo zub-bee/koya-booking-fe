@@ -1,0 +1,9 @@
+{
+  "name": "koya-booking-fe",
+  "scripts": {
+    "build": "node build.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.0.0"
+  }
+}
